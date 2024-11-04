@@ -1,22 +1,22 @@
+// concurrency.h
 #ifndef CONCURRENCY_H
 #define CONCURRENCY_H
 
-#include "fscs.h"
+#include "fscs.h"  // Inclui Caminho e outras estruturas definidas em fscs.h
 
+// Função para inicializar memória partilhada para armazenar os caminhos de cidadãos
+Caminho* inicializar_memoria_partilhada(int num_cidadaos);
 
-// function to initialize the shared memory to store the paths of the citizens
-Path *initialize_shared_memory(int num_people);
+// Função para inicializar os semáforos
+void inicializar_semaforos();
 
-// function to initialize the semaphore
-void initialize_semaphore();
+// Função para bloquear o semáforo (garante acesso exclusivo à memória partilhada)
+void lock_semaforo();
 
-// function to lock the semaphore
-void lock_semaphore();
+// Função para desbloquear o semáforo (libera o acesso à memória partilhada)
+void unlock_semaforo();
 
-// function to unlock the semaphore
-void unlock_semaphore();
+// Função para liberar os recursos, como memória partilhada e semáforos
+void liberar_recursos(Caminho *caminhos);
 
-// function to free the resources
-void free_resources(Path *paths);
-
-#endif
+#endif // CONCURRENCY_H

@@ -1,16 +1,13 @@
 #ifndef FSCS_H
-#define FSCH_H
+#define FSCS_H
 
 #include "input.h"
 
-
- //typedef struct for list of paths
 typedef struct {
-    Coordinate *path;
-    int length;
-} Path;
+    Coordenada *caminho;
+    int tamanho;
+} Caminho;
 
-//function find safe citizen 
-int find_safe_citizen( const Map *map, Path *paths, int num_people);
+int find_safe_citizen(const Mapa *mapa, Caminho *caminhos);
 
-#endif
+#endif // FSCS_H

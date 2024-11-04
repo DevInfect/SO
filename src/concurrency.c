@@ -1,69 +1,97 @@
+// concurrency.c
 #include "concurrency.h"
-#include <sys/types.h>
-#include <sys/ipc.h>
+#include "fscs.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+#include <signal.h>
+#include <sys/time.h>
 
-//global indicator for the shared memory segment
-int shmid;
-int semid;
+volatile int timeout = 0;
 
-// function to initialize the shared memory
-Path *initialize_shared_memory(int num_people) {
-    // allocate shared memory to store the paths of each citizen
-    shmid = shmget(IPC_PRIVATE, num_people * sizeof(Path), IPC_CREAT | 0666);
-    if (shmid < 0) {
-        perror("Error allocating shared memory");
+// Função para tratar o sinal de alarme
+void timeout_handler(int sig) {
+    timeout = 1;
+}
+
+// Função auxiliar para operar o semáforo
+void operacao_semaforo(int semid, int valor) {
+    struct sembuf op;
+    op.sem_num = 0;
+    op.sem_op = valor;
+    op.sem_flg = 0;
+    semop(semid, &op, 1);
+}
+
+int run_processes(int num_processes, const Mapa *mapa, int tempo_ms) {
+    int num_safos = 0;
+
+    signal(SIGALRM, timeout_handler);    
+
+    struct itimerval timer;
+    timer.it_value.tv_sec = tempo_ms / 1000;
+    timer.it_value.tv_usec = (tempo_ms % 1000) * 1000;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+    setitimer(ITIMER_REAL, &timer, NULL);
+
+    // Cria memória partilhada para armazenar o número total de cidadãos seguros
+    int shmid = shmget(IPC_PRIVATE, sizeof(int), IPC_CREAT | 0666);
+    if (shmid == -1) {
+        perror("Erro ao criar memória partilhada");
         exit(1);
     }
+    int *shared_num_safos = (int *)shmat(shmid, NULL, 0);
+    *shared_num_safos = 0;
 
-    // associate the shared memory segment to the pointer
-    Path *paths = (Path*) shmat(shmid, NULL, 0);
-    if(paths == (Path*) -1) {
-        perror("Error associating shared memory");
+    // Configura o semáforo
+    int semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0666);
+    if (semid == -1) {
+        perror("Erro ao criar semáforo");
         exit(1);
     }
+    semctl(semid, 0, SETVAL, 1);  // Inicializa o semáforo com valor 1
 
-    return paths;
+    // Cria os processos
+    for (int i = 0; i < num_processes; i++) {
+        if (timeout) {
+            printf("Tempo limite excedido. Encerrando execução.\n");
+            break;
+        }
 
-}
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("Erro ao criar processo");
+            exit(1);
+        } else if (pid == 0) {
+            // Processo filho
+            Caminho caminhos[mapa->num_cidadaos];
+            int solucoes_locais = find_safe_citizen(mapa, caminhos);
 
-void initialize_semaphore() {
-    // create a semaphore
-    semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0666);
-    if (semid < 0) {
-        perror("Error creating semaphore");
-        exit(1);
+            // Atualiza a contagem total de cidadãos seguros
+            operacao_semaforo(semid, -1);  // Trava o semáforo
+            *shared_num_safos += solucoes_locais;
+            operacao_semaforo(semid, 1);   // Libera o semáforo
+
+            exit(0);
+        }
     }
 
-    // initialize the semaphore with value 1 (unlocked)
-    semctl(semid, 0, SETVAL, 1);
-}
+    // Espera que todos os processos filhos terminem
+    for (int i = 0; i < num_processes; i++) {
+        wait(NULL);
+    }
 
-// lock the semaphore
-void lock_semaphore() {
-    struct sembuf sem_lock = {0, -1, 0};
-    semop(semid, &sem_lock, 1);
-}
+    // Copia o valor final da memória partilhada para a variável local
+    num_safos = *shared_num_safos;
 
-// unlock the semaphore
-void unlock_semaphore() {
-    struct sembuf sem_unlock = {0, 1, 0};
-    semop(semid, &sem_unlock, 1);
-}
-
-// free the resources
-void free_resources(Path *paths) {
-    // detach the shared memory segment
-    shmdt(paths);
-
-    // remove the shared memory segment
+    // Libera o semáforo e a memória partilhada
+    shmdt(shared_num_safos);
     shmctl(shmid, IPC_RMID, NULL);
-
-    // remove the semaphore
     semctl(semid, 0, IPC_RMID);
+
+    return num_safos;
 }

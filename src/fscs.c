@@ -1,58 +1,70 @@
 #include "fscs.h"
 #include <stdlib.h>
+#include <stdio.h>
 
-// auxiliary function to see if a node has already been visited by another citizen
-int is_already_visited(Coordinate coordinate, Path *paths, int num_people)
-{
-    for (int i = 0; i < num_people; i++)
-    {
-        for (int j = 0; j < paths[i].length; j++)
-        {
-            if (coordinate.avenue == paths[i].path[j].avenue && coordinate.street == paths[i].path[j].street)
-            {
-                return 1;
+static int caminho_valido(Coordenada pos, Caminho *caminhos, int num_cidadaos) {
+    for (int i = 0; i < num_cidadaos; i++) {
+        for (int j = 0; j < caminhos[i].tamanho; j++) {
+            if (caminhos[i].caminho[j].avenida == pos.avenida &&
+                caminhos[i].caminho[j].rua == pos.rua) {
+                return 0; // Cruzamento já visitado
             }
         }
     }
-    return 0;
+    return 1; // Cruzamento livre
 }
 
-int find_safe_citizen(const Map *map, Path *paths, int num_people) {
-    // for each person, calculate a safe path to a supermarket
-    for (int person = 0; person < num_people; person ++) {
-        int num_solutions = 0;
+int find_safe_citizen(const Mapa *mapa, Caminho *caminhos) {
+    int num_solucoes = 0;
 
-        Coordinate curr_pos = map->people[person];
-        paths[person].length = 0;
+    // Percorre todos os cidadãos
+    for (int cidadao = 0; cidadao < mapa->num_cidadaos; cidadao++) {
+        Coordenada pos_atual = mapa->cidadaos[cidadao];
+        caminhos[cidadao].tamanho = 0;
+        caminhos[cidadao].caminho = malloc((mapa->M + mapa->N) * sizeof(Coordenada));
 
-        // while the person is not at a supermarket, search for the nearest safe node
-        while (1)
-        {
-            // checks if the current position is a supermarket
-            for (int i = 0; i < num_people; i++)
-            {
-                if (curr_pos.avenue == map->supermarket[i].avenue && curr_pos.street == map->supermarket[i].street)
-                {
-                    paths[person].path[paths[person].length++] = curr_pos;
-                    num_solutions++;
-                    break;
-                }
+        int encontrou_supermercado = 0;
+
+        // Busca um supermercado
+        for (int s = 0; s < mapa->num_supermercados; s++) {
+            Coordenada destino = mapa->supermercados[s];
+
+            // Caminho direto em Manhattan: primeiro move-se na avenida, depois na rua
+            Coordenada passo;
+
+            // Movendo na direção horizontal (avenida)
+            while (pos_atual.avenida != destino.avenida) {
+                passo = pos_atual;
+                passo.avenida += (destino.avenida > pos_atual.avenida) ? 1 : -1;
+                if (!caminho_valido(passo, caminhos, cidadao)) break;
+
+                caminhos[cidadao].caminho[caminhos[cidadao].tamanho++] = passo;
+                pos_atual = passo;
             }
 
-            // logic to find the next node
-            Coordinate next_pos = {curr_pos.avenue, curr_pos.street + 1};
+            // Movendo na direção vertical (rua)
+            while (pos_atual.rua != destino.rua && caminho_valido(pos_atual, caminhos, cidadao)) {
+                passo = pos_atual;
+                passo.rua += (destino.rua > pos_atual.rua) ? 1 : -1;
+                if (!caminho_valido(passo, caminhos, cidadao)) break;
 
-            // verify if node has been visited
-            if (is_already_visited(next_pos, paths, num_people)){
+                caminhos[cidadao].caminho[caminhos[cidadao].tamanho++] = passo;
+                pos_atual = passo;
+            }
+
+            // Verifica se chegou ao supermercado
+            if (pos_atual.avenida == destino.avenida && pos_atual.rua == destino.rua) {
+                encontrou_supermercado = 1;
+                num_solucoes++;
                 break;
             }
-            
-            // add node to path and go
-            paths[person].path[paths[person].length++] = next_pos;
-            curr_pos = next_pos;
         }
 
-        return num_solutions;
-        
+        // Se não encontrou um caminho, libera a memória do caminho desse cidadão
+        if (!encontrou_supermercado) {
+            free(caminhos[cidadao].caminho);
+            caminhos[cidadao].caminho = NULL;
+        }
     }
+    return num_solucoes;
 }
