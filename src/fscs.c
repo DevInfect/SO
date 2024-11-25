@@ -1,70 +1,103 @@
 #include "fscs.h"
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 
-static int caminho_valido(Coordenada pos, Caminho *caminhos, int num_cidadaos) {
-    for (int i = 0; i < num_cidadaos; i++) {
-        for (int j = 0; j < caminhos[i].tamanho; j++) {
-            if (caminhos[i].caminho[j].avenida == pos.avenida &&
-                caminhos[i].caminho[j].rua == pos.rua) {
-                return 0; // Cruzamento já visitado
-            }
-        }
+static int is_valid_move(const Mapa *mapa, Coordenada pos, Coordenada *visited, int visit_count) {
+    // Verifica se está dentro dos limites
+    if (pos.avenida < 0 || pos.avenida >= mapa->M || 
+        pos.rua < 0 || pos.rua >= mapa->N)
+        return 0;
+
+    // Verifica se o ponto já foi visitado
+    for (int i = 0; i < visit_count; i++) {
+        if (visited[i].avenida == pos.avenida && visited[i].rua == pos.rua)
+            return 0;
     }
-    return 1; // Cruzamento livre
+
+    return 1;
 }
 
-int find_safe_citizen(const Mapa *mapa, Caminho *caminhos) {
-    int num_solucoes = 0;
+static int find_path_to_supermarket(const Mapa *mapa, Coordenada start, 
+                                  Caminho *caminho, int cidadao_id) {
+    int max_path = mapa->M * mapa->N;
+    Coordenada *visited = malloc(max_path * sizeof(Coordenada));
+    int visit_count = 0;
 
-    // Percorre todos os cidadãos
-    for (int cidadao = 0; cidadao < mapa->num_cidadaos; cidadao++) {
-        Coordenada pos_atual = mapa->cidadaos[cidadao];
-        caminhos[cidadao].tamanho = 0;
-        caminhos[cidadao].caminho = malloc((mapa->M + mapa->N) * sizeof(Coordenada));
+    // Inicializa o caminho
+    caminho->cidadao_id = cidadao_id;
+    caminho->tamanho = 0;
+    caminho->caminho = malloc(max_path * sizeof(Coordenada));
+    
+    // Adiciona posição inicial
+    visited[visit_count++] = start;
+    caminho->caminho[caminho->tamanho++] = start;
 
-        int encontrou_supermercado = 0;
+    // Direções possíveis (norte, sul, leste, oeste)
+    const int dx[] = {0, 0, 1, -1};
+    const int dy[] = {1, -1, 0, 0};
 
-        // Busca um supermercado
-        for (int s = 0; s < mapa->num_supermercados; s++) {
-            Coordenada destino = mapa->supermercados[s];
-
-            // Caminho direto em Manhattan: primeiro move-se na avenida, depois na rua
-            Coordenada passo;
-
-            // Movendo na direção horizontal (avenida)
-            while (pos_atual.avenida != destino.avenida) {
-                passo = pos_atual;
-                passo.avenida += (destino.avenida > pos_atual.avenida) ? 1 : -1;
-                if (!caminho_valido(passo, caminhos, cidadao)) break;
-
-                caminhos[cidadao].caminho[caminhos[cidadao].tamanho++] = passo;
-                pos_atual = passo;
-            }
-
-            // Movendo na direção vertical (rua)
-            while (pos_atual.rua != destino.rua && caminho_valido(pos_atual, caminhos, cidadao)) {
-                passo = pos_atual;
-                passo.rua += (destino.rua > pos_atual.rua) ? 1 : -1;
-                if (!caminho_valido(passo, caminhos, cidadao)) break;
-
-                caminhos[cidadao].caminho[caminhos[cidadao].tamanho++] = passo;
-                pos_atual = passo;
-            }
-
-            // Verifica se chegou ao supermercado
-            if (pos_atual.avenida == destino.avenida && pos_atual.rua == destino.rua) {
-                encontrou_supermercado = 1;
-                num_solucoes++;
-                break;
-            }
+    // Para cada supermercado, tenta encontrar um caminho
+    for (int s = 0; s < mapa->num_supermercados; s++) {
+        Coordenada current = start;
+        Coordenada target = mapa->supermercados[s];
+        
+        // Tenta chegar ao supermercado movendo-se primeiro na horizontal
+        while (current.avenida != target.avenida) {
+            Coordenada next = current;
+            next.avenida += (target.avenida > current.avenida) ? 1 : -1;
+            
+            if (!is_valid_move(mapa, next, visited, visit_count))
+                continue;
+                
+            current = next;
+            visited[visit_count++] = current;
+            caminho->caminho[caminho->tamanho++] = current;
         }
-
-        // Se não encontrou um caminho, libera a memória do caminho desse cidadão
-        if (!encontrou_supermercado) {
-            free(caminhos[cidadao].caminho);
-            caminhos[cidadao].caminho = NULL;
+        
+        // Depois move-se na vertical
+        while (current.rua != target.rua) {
+            Coordenada next = current;
+            next.rua += (target.rua > current.rua) ? 1 : -1;
+            
+            if (!is_valid_move(mapa, next, visited, visit_count))
+                continue;
+                
+            current = next;
+            visited[visit_count++] = current;
+            caminho->caminho[caminho->tamanho++] = current;
+        }
+        
+        // Se chegou ao destino
+        if (current.avenida == target.avenida && current.rua == target.rua) {
+            free(visited);
+            return 1;
         }
     }
-    return num_solucoes;
+
+    // Não encontrou caminho
+    free(visited);
+    free(caminho->caminho);
+    caminho->caminho = NULL;
+    caminho->tamanho = 0;
+    return 0;
+}
+
+int find_safe_paths(const Mapa *mapa, Caminho *caminhos) {
+    int num_safe = 0;
+    
+    for (int i = 0; i < mapa->num_cidadaos; i++) {
+        if (find_path_to_supermarket(mapa, mapa->cidadaos[i], &caminhos[i], i)) {
+            num_safe++;
+        }
+    }
+    
+    return num_safe;
+}
+
+void free_caminhos(Caminho *caminhos, int num_cidadaos) {
+    for (int i = 0; i < num_cidadaos; i++) {
+        if (caminhos[i].caminho != NULL) {
+            free(caminhos[i].caminho);
+        }
+    }
 }

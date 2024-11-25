@@ -13,9 +13,13 @@ typedef struct {
     int num_cidadaos;
     Coordenada *supermercados;
     Coordenada *cidadaos;
+    int **grid;  // Matriz para representar o grid da cidade
 } Mapa;
 
 // Função para carregar o input a partir de um ficheiro
 int load_input(const char *filename, Mapa *mapa);
+
+// Função para liberar a memória do mapa
+void free_mapa(Mapa *mapa);
 
 #endif // INPUT_H

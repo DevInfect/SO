@@ -4,37 +4,48 @@ EXEC = projeto_so
 # Compilador e flags de compilação
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -std=c11
+LDFLAGS = -pthread
 
-# Diretórios para os ficheiros fonte e cabeçalho
+# Diretórios
 SRC_DIR = src
 INC_DIR = include
+BUILD_DIR = build
+TEST_DIR = tests/file_tests
 
 # Ficheiros fonte e objetos
 SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:.c=.o)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
 # Incluir ficheiros de cabeçalho do diretório include
 INCLUDES = -I$(INC_DIR)
 
+# Criar diretório build se não existir
+$(shell mkdir -p $(BUILD_DIR))
+
+# Regra principal
+all: $(EXEC)
+
 # Regra para compilar o executável
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(EXEC) $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 # Regra para compilar cada ficheiro fonte em objeto
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Limpeza dos ficheiros objetos e executáveis
 clean:
-	rm -f $(SRC_DIR)/*.o $(EXEC)
+	rm -rf $(BUILD_DIR) $(EXEC)
 
-# Regra padrão para compilar tudo
-all: $(EXEC)
-
-# Regra para executar o programa com um ficheiro de teste (opcional)
+# Regra para executar o programa com um ficheiro de teste
 run: $(EXEC)
-	./$(EXEC) tests/file_tests/instances_2.txt 11 1
-
+	./$(EXEC) $(TEST_DIR)/instances_2.txt 11 1
 
 # Regra para limpeza e recompilação completa
 rebuild: clean all
+
+# Regra para verificar memory leaks com valgrind
+memcheck: $(EXEC)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC) $(TEST_DIR)/instances_2.txt 11 1
+
+.PHONY: all clean rebuild run memcheck
