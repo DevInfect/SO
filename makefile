@@ -1,40 +1,35 @@
-# Nome do executável
-EXEC = projeto_so
-
-# Compilador e flags de compilação
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c11
+CFLAGS = -Wall -Wextra -I./include -g -O2
+LDFLAGS = -pthread -lrt
 
-# Diretórios para os ficheiros fonte e cabeçalho
 SRC_DIR = src
-INC_DIR = include
+OBJ_DIR = obj
+BIN_DIR = bin
+TEST_DIR = tests/file_tests
 
-# Ficheiros fonte e objetos
 SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:.c=.o)
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+EXEC = $(BIN_DIR)/safe
 
-# Incluir ficheiros de cabeçalho do diretório include
-INCLUDES = -I$(INC_DIR)
+.PHONY: all clean test
 
-# Regra para compilar o executável
-$(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(EXEC) $(OBJS)
-
-# Regra para compilar cada ficheiro fonte em objeto
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-# Limpeza dos ficheiros objetos e executáveis
-clean:
-	rm -f $(SRC_DIR)/*.o $(EXEC)
-
-# Regra padrão para compilar tudo
 all: $(EXEC)
 
-# Regra para executar o programa com um ficheiro de teste (opcional)
-run: $(EXEC)
-	./$(EXEC) tests/file_tests/instances_2.txt 11 1
+$(EXEC): $(OBJS) | $(BIN_DIR)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Regra para limpeza e recompilação completa
-rebuild: clean all
+$(BIN_DIR) $(OBJ_DIR):
+	mkdir -p $@
+
+test: $(EXEC)
+	@echo "Running tests..."
+	@for test in $(TEST_DIR)/instances_*.txt; do \
+		echo "Testing $$test..."; \
+		./$(EXEC) $$test 4 5000; \
+	done
+
+clean:
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
