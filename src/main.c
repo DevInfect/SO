@@ -13,15 +13,30 @@
 #include "../include/safe_citizens.h"
 #include "../include/utils.h"
 
+    void signal_handler(int signum) {
+    if (signum == SIGTERM) {
+        exit(0);
+    }
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 4) {
         printf("Usage: %s <input_file> <num_processes> <timeout_ms>\n", argv[0]);
         return 1;
     }
 
+
+// In main, before fork:
+signal(SIGTERM, signal_handler);
+
     char* input_file = argv[1];
     int num_processes = atoi(argv[2]);
     int timeout_ms = atoi(argv[3]);
+
+  if (num_processes <= 0 || timeout_ms <= 0) {
+        fprintf(stderr, "Invalid number of processes or timeout value\n");
+        return 1;
+    }
 
     // Read input
     int M, N, num_citizens, num_supermarkets;
@@ -43,7 +58,7 @@ int main(int argc, char* argv[]) {
     shared_mem->iterations = 0;
     shared_mem->time_to_best = 0;
 
-    long start_time = get_current_time_ms();
+
     pid_t* pids = malloc(num_processes * sizeof(pid_t));
 
     // Create processes
@@ -81,7 +96,7 @@ int main(int argc, char* argv[]) {
     printf("Total iterations: %d\n", shared_mem->iterations);
     printf("Time to best solution: %ld ms\n", shared_mem->time_to_best);
 
-    // Cleanup
+     // Cleanup
     sem_close(mutex);
     sem_unlink("/safe_mutex");
     shmdt(shared_mem);
@@ -89,6 +104,10 @@ int main(int argc, char* argv[]) {
     free(citizens);
     free(supermarkets);
     free(pids);
+    
+    for (int i = 0; i < num_processes; i++) {
+        wait(NULL);  // Wait for child processes to finish
+    }
 
     return 0;
 } 

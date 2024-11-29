@@ -22,6 +22,9 @@ typedef struct {
     sem_t* mutex;
     int iterations;
     long time_to_best;
+    int optimal_solutions_found;
+    double avg_execution_time;
+    double avg_iterations;
 } SharedMemory;
 
 Solution create_solution();

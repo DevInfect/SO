@@ -5,6 +5,10 @@
 
 Graph* create_graph(int M, int N) {
     Graph* g = (Graph*)malloc(sizeof(Graph));
+    if (!g) {
+        fprintf(stderr, "Failed to allocate graph\n");
+        exit(1);
+    }
     g->M = M;
     g->N = N;
     g->num_vertices = M * N + 2;  // +2 for source and sink vertices
