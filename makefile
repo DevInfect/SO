@@ -5,7 +5,7 @@ LDFLAGS = -pthread -lrt
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
-TEST_DIR = tests
+TEST_DIR = tests/file_tests
 
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
