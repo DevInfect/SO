@@ -1,51 +1,27 @@
-# Nome do executável
-EXEC = projeto_so
-
-# Compilador e flags de compilação
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c11
+CFLAGS = -Wall -Wextra -I./include
 LDFLAGS = -pthread
 
-# Diretórios
 SRC_DIR = src
-INC_DIR = include
-BUILD_DIR = build
-TEST_DIR = tests/file_tests
+OBJ_DIR = obj
+BIN_DIR = bin
 
-# Ficheiros fonte e objetos
 SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+EXEC = $(BIN_DIR)/safe
 
-# Incluir ficheiros de cabeçalho do diretório include
-INCLUDES = -I$(INC_DIR)
+.PHONY: all clean
 
-# Criar diretório build se não existir
-$(shell mkdir -p $(BUILD_DIR))
-
-# Regra principal
 all: $(EXEC)
 
-# Regra para compilar o executável
-$(EXEC): $(OBJS)
+$(EXEC): $(OBJS) | $(BIN_DIR)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
-# Regra para compilar cada ficheiro fonte em objeto
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpeza dos ficheiros objetos e executáveis
+$(BIN_DIR) $(OBJ_DIR):
+	mkdir -p $@
+
 clean:
-	rm -rf $(BUILD_DIR) $(EXEC)
-
-# Regra para executar o programa com um ficheiro de teste
-run: $(EXEC)
-	./$(EXEC) $(TEST_DIR)/instances_2.txt 11 1
-
-# Regra para limpeza e recompilação completa
-rebuild: clean all
-
-# Regra para verificar memory leaks com valgrind
-memcheck: $(EXEC)
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC) $(TEST_DIR)/instances_2.txt 11 1
-
-.PHONY: all clean rebuild run memcheck
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
