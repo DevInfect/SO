@@ -6,6 +6,6 @@ This project is for the Operating Systems class and will be developed in C compi
 Myself, Paulo Neves and João Cabrita.
 ## Roadmap
 - [x] Create the repository.
-- [ ] Develop the project.
+- [x] Develop the project.
 - [ ] Finish the project.
 - [ ] Submit the project.
