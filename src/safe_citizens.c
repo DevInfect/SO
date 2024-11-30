@@ -10,6 +10,9 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
     int* next_nodes = (int*)malloc(g->num_vertices * sizeof(int));
     int next_nodes_count = 0;
     
+    // Start with source vertex
+    current_path[path_length++] = 0;
+    
     // Get initial nodes (connected to source)
     int* neighbors = get_neighbors(g, 0, &next_nodes_count);
     memcpy(next_nodes, neighbors, next_nodes_count * sizeof(int));
@@ -22,30 +25,24 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
         // Remove chosen node from next_nodes
         next_nodes[idx] = next_nodes[--next_nodes_count];
 
-        // Check if node is supermarket (connected to sink)
-        int neighbor_count;
-        neighbors = get_neighbors(g, current, &neighbor_count);
-        for (int i = 0; i < neighbor_count; i++) {
-            if (neighbors[i] == g->num_vertices - 1) {
-                // Found path to supermarket
-                current_path[path_length++] = current;
-                add_path_to_solution(current_solution, current_path, path_length);
-                
-                // Mark path as visited
-                for (int j = 0; j < path_length; j++) {
-                    visited[current_path[j]] = 1;
-                }
-                
-                free(current_path);
-                free(next_nodes);
-                return 1;
-            }
-        }
-
         if (!visited[current]) {
             // Add current node to path
             current_path[path_length++] = current;
             visited[current] = 1;
+
+            // Check if node is supermarket (connected to sink)
+            int neighbor_count;
+            neighbors = get_neighbors(g, current, &neighbor_count);
+            for (int i = 0; i < neighbor_count; i++) {
+                if (neighbors[i] == g->num_vertices - 1) {
+                    // Found path to supermarket, add sink vertex
+                    current_path[path_length++] = g->num_vertices - 1;
+                    add_path_to_solution(current_solution, current_path, path_length);
+                    free(current_path);
+                    free(next_nodes);
+                    return 1;
+                }
+            }
 
             // Add unvisited neighbors to next_nodes
             for (int i = 0; i < neighbor_count; i++) {
