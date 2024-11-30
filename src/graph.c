@@ -69,5 +69,9 @@ int* get_neighbors(Graph* g, int vertex, int* count) {
 }
 
 int get_vertex_number(Graph* g, int avenue, int street) {
+    if (avenue < 1 || avenue > g->M || street < 1 || street > g->N) {
+        fprintf(stderr, "Invalid coordinates: avenue=%d, street=%d\n", avenue, street);
+        exit(1);
+    }
     return 1 + (street - 1) * g->M + (avenue - 1);
 } 

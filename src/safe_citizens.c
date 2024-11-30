@@ -21,16 +21,14 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
         if (!visited[current]) {
             // Start new path
             path_length = 0;
-            current_path[path_length++] = 0;  // Add source
-            current_path[path_length++] = current;  // Add current vertex
+            int vertex = current;  // This is the actual grid vertex number
+            current_path[path_length++] = vertex;
             
-            int current_vertex = current;
+            int current_vertex = vertex;
             int found_supermarket = 0;
-            int visited_temp[MAX_VERTICES] = {0};
-            visited_temp[0] = 1;
-            visited_temp[current] = 1;
+            int* visited_temp = (int*)calloc(g->num_vertices, sizeof(int));
+            visited_temp[vertex] = 1;
             
-            // Try to find path to supermarket
             while (!found_supermarket) {
                 int neighbor_count;
                 neighbors = get_neighbors(g, current_vertex, &neighbor_count);
@@ -38,11 +36,12 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
                 // Check if we found a supermarket
                 for (int i = 0; i < neighbor_count; i++) {
                     if (neighbors[i] == g->num_vertices - 1) {
-                        current_path[path_length++] = g->num_vertices - 1;
+                        current_path[path_length++] = neighbors[i];
                         add_path_to_solution(current_solution, current_path, path_length);
-                        visited[current] = 1;  // Mark only the citizen vertex as visited
+                        visited[current] = 1;
                         free(current_path);
                         free(next_nodes);
+                        free(visited_temp);
                         return 1;
                     }
                 }
@@ -59,11 +58,10 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
                     }
                 }
                 
-                if (!moved) break;  // No unvisited neighbors left
+                if (!moved) break;
             }
+            free(visited_temp);
         }
-        
-        // Remove processed node from next_nodes
         next_nodes[idx] = next_nodes[--next_nodes_count];
     }
     
