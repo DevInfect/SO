@@ -12,49 +12,59 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
     
     // Get initial nodes (connected to source)
     int* neighbors = get_neighbors(g, 0, &next_nodes_count);
-    for (int i = 0; i < next_nodes_count; i++) {
-        if (!visited[neighbors[i]]) {
-            // Start new path from source to this citizen
+    memcpy(next_nodes, neighbors, next_nodes_count * sizeof(int));
+
+    while (next_nodes_count > 0) {
+        int idx = rand() % next_nodes_count;
+        int current = next_nodes[idx];
+        
+        if (!visited[current]) {
+            // Start new path
             path_length = 0;
-            current_path[path_length++] = 0;  // source
-            current_path[path_length++] = neighbors[i];  // citizen
-            visited[neighbors[i]] = 1;
+            current_path[path_length++] = 0;  // Add source
+            current_path[path_length++] = current;  // Add current vertex
             
-            // Try to find path to a supermarket
-            int current = neighbors[i];
-            int found_path = 0;
+            int current_vertex = current;
+            int found_supermarket = 0;
+            int visited_temp[MAX_VERTICES] = {0};
+            visited_temp[0] = 1;
+            visited_temp[current] = 1;
             
-            while (!found_path) {
+            // Try to find path to supermarket
+            while (!found_supermarket) {
                 int neighbor_count;
-                int* current_neighbors = get_neighbors(g, current, &neighbor_count);
+                neighbors = get_neighbors(g, current_vertex, &neighbor_count);
                 
-                // Check if connected to sink (supermarket found)
-                for (int j = 0; j < neighbor_count; j++) {
-                    if (current_neighbors[j] == g->num_vertices - 1) {
+                // Check if we found a supermarket
+                for (int i = 0; i < neighbor_count; i++) {
+                    if (neighbors[i] == g->num_vertices - 1) {
                         current_path[path_length++] = g->num_vertices - 1;
                         add_path_to_solution(current_solution, current_path, path_length);
+                        visited[current] = 1;  // Mark only the citizen vertex as visited
                         free(current_path);
                         free(next_nodes);
                         return 1;
                     }
                 }
                 
-                // Try next unvisited neighbor
-                found_path = 0;
-                for (int j = 0; j < neighbor_count; j++) {
-                    int next = current_neighbors[j];
-                    if (!visited[next] && next != g->num_vertices - 1) {
-                        current_path[path_length++] = next;
-                        visited[next] = 1;
-                        current = next;
-                        found_path = 1;
+                // Try to move to an unvisited neighbor
+                int moved = 0;
+                for (int i = 0; i < neighbor_count; i++) {
+                    if (!visited_temp[neighbors[i]] && neighbors[i] != g->num_vertices - 1) {
+                        current_vertex = neighbors[i];
+                        current_path[path_length++] = current_vertex;
+                        visited_temp[current_vertex] = 1;
+                        moved = 1;
                         break;
                     }
                 }
                 
-                if (!found_path) break;  // No more paths to try
+                if (!moved) break;  // No unvisited neighbors left
             }
         }
+        
+        // Remove processed node from next_nodes
+        next_nodes[idx] = next_nodes[--next_nodes_count];
     }
     
     free(current_path);
