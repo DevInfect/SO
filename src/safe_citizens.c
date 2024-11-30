@@ -21,13 +21,13 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
         if (!visited[current]) {
             // Start new path
             path_length = 0;
-            int vertex = current;  // This is the actual grid vertex number
+            int vertex = get_vertex_number(g, current % g->M + 1, current / g->M + 1);
             current_path[path_length++] = vertex;
             
             int current_vertex = vertex;
             int found_supermarket = 0;
             int* visited_temp = (int*)calloc(g->num_vertices, sizeof(int));
-            visited_temp[vertex] = 1;
+            visited_temp[current] = 1;
             
             while (!found_supermarket) {
                 int neighbor_count;
