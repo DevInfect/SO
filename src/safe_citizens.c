@@ -19,29 +19,30 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
         int current = next_nodes[idx];
         
         if (!visited[current]) {
-            // Start new path
             path_length = 0;
-            int vertex = get_vertex_number(g, current % g->M + 1, current / g->M + 1);
-            current_path[path_length++] = vertex;
+            current_path[path_length++] = 0;  // Add source
+            current_path[path_length++] = current;  // Add citizen vertex
             
-            int current_vertex = vertex;
-            int found_supermarket = 0;
+            int current_vertex = current;
             int* visited_temp = (int*)calloc(g->num_vertices, sizeof(int));
             visited_temp[current] = 1;
             
-            while (!found_supermarket) {
+            while (1) {
                 int neighbor_count;
                 neighbors = get_neighbors(g, current_vertex, &neighbor_count);
                 
                 // Check if we found a supermarket
                 for (int i = 0; i < neighbor_count; i++) {
                     if (neighbors[i] == g->num_vertices - 1) {
-                        current_path[path_length++] = neighbors[i];
-                        add_path_to_solution(current_solution, current_path, path_length);
+                        current_path[path_length++] = g->num_vertices - 1;  // Add sink
+                        int* path_copy = (int*)malloc(path_length * sizeof(int));
+                        memcpy(path_copy, current_path, path_length * sizeof(int));
+                        add_path_to_solution(current_solution, path_copy, path_length);
+                        free(path_copy);
                         visited[current] = 1;
+                        free(visited_temp);
                         free(current_path);
                         free(next_nodes);
-                        free(visited_temp);
                         return 1;
                     }
                 }
