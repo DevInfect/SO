@@ -53,11 +53,14 @@ void destroy_graph(Graph* g) {
 void add_citizen(Graph* g, Location loc) {
     int vertex = get_vertex_number(g, loc.avenue, loc.street);
     g->adjacency_list[0][g->list_sizes[0]++] = vertex;
+    g->adjacency_list[vertex][g->list_sizes[vertex]++] = 0;  // Add bidirectional edge
 }
 
 void add_supermarket(Graph* g, Location loc) {
     int vertex = get_vertex_number(g, loc.avenue, loc.street);
-    g->adjacency_list[vertex][g->list_sizes[vertex]++] = g->num_vertices - 1;
+    int sink = g->num_vertices - 1;
+    g->adjacency_list[vertex][g->list_sizes[vertex]++] = sink;
+    g->adjacency_list[sink][g->list_sizes[sink]++] = vertex;  // Add bidirectional edge
 }
 
 int* get_neighbors(Graph* g, int vertex, int* count) {
@@ -66,5 +69,5 @@ int* get_neighbors(Graph* g, int vertex, int* count) {
 }
 
 int get_vertex_number(Graph* g, int avenue, int street) {
-    return (street - 1) * g->M + avenue;
+    return 1 + (street - 1) * g->M + (avenue - 1);
 } 
