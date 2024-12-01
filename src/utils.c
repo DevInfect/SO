@@ -200,6 +200,7 @@ void write_file_results(const char* filename, int total_time, Solution* solution
         }
         fprintf(file, "\n");
     }
+    fprintf(file, "\n");  // Add final newline
 
     fclose(file);
 }

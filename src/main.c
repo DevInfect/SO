@@ -90,9 +90,12 @@ signal(SIGTERM, signal_handler);
         kill(pids[i], SIGTERM);
     }
 
-    // Print results
+    // Extract instance number from input filename
+    char instance_num[10];
+    sscanf(input_file, "instances_%[^.]", instance_num);
+
     char results_filename[256];
-    sprintf(results_filename, "tests/file_results/res_instance_%d.txt", getpid());
+    sprintf(results_filename, "tests/file_results/res_instances_%s.txt", instance_num);
     write_file_results(results_filename, timeout_ms, &shared_mem->best_solution,
                       shared_mem->iterations, shared_mem->time_to_best);
 
