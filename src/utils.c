@@ -179,3 +179,27 @@ void print_test_results(const char* test_name, int total_time, int num_processes
     printf("Time to best solution: %d ms\n", time_to_best);
     printf("----------------------------------------\n");
 }
+
+void write_file_results(const char* filename, int total_time, Solution* solution, 
+                       int iterations, int time_to_best) {
+    FILE* file = fopen(filename, "w");
+    if (!file) {
+        perror("Error opening results file");
+        return;
+    }
+
+    fprintf(file, "Executed in real time in %.3f seconds.\n", total_time / 1000.0);
+    fprintf(file, "Best Solution = %d at iteracao %d on %.3f seconds\n", 
+            solution->score, iterations, time_to_best / 1000.0);
+
+    // Print paths as arrays
+    for (int i = 0; i < solution->num_paths; i++) {
+        fprintf(file, "%d - Array:", i + 1);
+        for (int j = 0; j < solution->paths[i].path_length; j++) {
+            fprintf(file, " %d", solution->paths[i].path[j]);
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+}

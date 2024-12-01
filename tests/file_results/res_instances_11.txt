@@ -1,0 +1,10 @@
+Executed in real time in .504 seconds.
+Best Solution = 8 at iteracao 90 on 0.168 seconds
+1 - Array: 66 
+2 - Array: 99 110 121 120 109 98 87 88 77 76 75 64 
+3 - Array: 91 102 103 114 113 112 111 100 101 90 79 78 67 56 57 58 
+4 - Array: 19 
+5 - Array: 18 29 30 31 20 9 10 21 
+6 - Array: 5 16 17 6 7 8 
+7 - Array: 49 48 47 36 25 14 15 4 
+8 - Array: 69 70 81 82 83 84 95 94 105 104 115 116 117 106 107 

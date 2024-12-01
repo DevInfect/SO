@@ -1,0 +1,9 @@
+Executed in real time in .060 seconds.
+Best Solution = 7 at iteracao 6 on 0.002 seconds
+1 - Array: 46 45 
+2 - Array: 21 29 
+3 - Array: 14 13 5 4 12 20 28 36 37 
+4 - Array: 32 40 48 47 39 31 23 22 
+5 - Array: 52 60 59 51 50 42 
+6 - Array: 1 
+7 - Array: 2 10 9 17 

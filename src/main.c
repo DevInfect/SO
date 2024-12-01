@@ -91,10 +91,10 @@ signal(SIGTERM, signal_handler);
     }
 
     // Print results
-    printf("Best solution found:\n");
-    print_solution(&shared_mem->best_solution);
-    printf("Total iterations: %d\n", shared_mem->iterations);
-    printf("Time to best solution: %ld ms\n", shared_mem->time_to_best);
+    char results_filename[256];
+    sprintf(results_filename, "tests/file_results/res_instance_%d.txt", getpid());
+    write_file_results(results_filename, timeout_ms, &shared_mem->best_solution,
+                      shared_mem->iterations, shared_mem->time_to_best);
 
      // Cleanup
     sem_close(mutex);

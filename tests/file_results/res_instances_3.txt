@@ -1,0 +1,5 @@
+Executed in real time in .015 seconds.
+Best Solution = 3 at iteracao 18 on 0.007 seconds
+1 - Array: 4 7 10 
+2 - Array: 1 2 3 6 9 
+3 - Array: 5 8 11 
