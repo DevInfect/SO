@@ -96,11 +96,15 @@ void read_input(char* filename, int* M, int* N, Location** citizens, int* num_ci
     fclose(file);
 }
 
-void print_solution(Solution* s) {
-    printf("Number of safe citizens: %d\n", s->score);
-    printf("Paths:\n");
+void print_solution(Solution* s, long start_time, int iterations, long time_to_best) {
+    double execution_time = (get_current_time_ms() - start_time) / 1000.0;
+
+    printf("Executado em tempo real em %.3f segundos.\n", execution_time);
+    printf("Melhor solução = %d na iteração %d em %.3f segundos\n",
+           s->score, iterations, time_to_best / 1000.0);
+
     for (int i = 0; i < s->num_paths; i++) {
-        printf("Citizen %d: ", i + 1);
+        printf("%d - Caminho: ", i + 1);
         for (int j = 0; j < s->paths[i].path_length; j++) {
             printf("%d ", s->paths[i].path[j]);
         }
@@ -112,7 +116,7 @@ long get_current_time_ms() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
-} 
+}
 
 void validate_input(int M, int N, Location* citizens, int num_citizens, 
                    Location* supermarkets, int num_supermarkets) {

@@ -6,7 +6,7 @@
 
 void read_input(char* filename, int* M, int* N, Location** citizens, 
                 int* num_citizens, Location** supermarkets, int* num_supermarkets);
-void print_solution(Solution* s);
+void print_solution(Solution* s, long start_time, int iterations, long time_to_best);
 long get_current_time_ms();
 void validate_input(int M, int N, Location* citizens, int num_citizens, 
                    Location* supermarkets, int num_supermarkets);

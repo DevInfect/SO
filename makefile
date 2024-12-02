@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -I./include -g -O2
+CFLAGS = -Wall -Wextra -I./include -g -O2  # Inclui a flag -g para informações de debug
 LDFLAGS = -pthread -lrt
 
 SRC_DIR = src
@@ -11,7 +11,7 @@ SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 EXEC = $(BIN_DIR)/safe
 
-.PHONY: all clean test
+.PHONY: all clean test debug
 
 all: $(EXEC)
 
@@ -30,6 +30,10 @@ test: $(EXEC)
 		echo "Testing $$test..."; \
 		./$(EXEC) $$test 4 5000; \
 	done
+
+debug: $(OBJS) | $(BIN_DIR)
+	$(CC) $(OBJS) -o $(EXEC) $(LDFLAGS) $(CFLAGS)  # Compila com depuração habilitada
+	@gdb ./$(EXEC)   # Executa o programa com o gdb para depuração
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)

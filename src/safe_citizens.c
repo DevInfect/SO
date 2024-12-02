@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../include/safe_citizens.h"
@@ -10,34 +11,42 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
     int* next_nodes = (int*)malloc(g->num_vertices * sizeof(int));
     int next_nodes_count = 0;
     
-    // Get initial nodes (connected to source)
+    // Obter nós iniciais (conectados ao nó 0)
     int* neighbors = get_neighbors(g, 0, &next_nodes_count);
     memcpy(next_nodes, neighbors, next_nodes_count * sizeof(int));
 
     while (next_nodes_count > 0) {
         int idx = rand() % next_nodes_count;
         int current = next_nodes[idx];
-        
+
         if (!visited[current]) {
-            // Start new path
             path_length = 0;
-            int vertex = current;  // This is the actual grid vertex number
+            int vertex = current;
             current_path[path_length++] = vertex;
-            
+
             int current_vertex = vertex;
             int found_supermarket = 0;
             int* visited_temp = (int*)calloc(g->num_vertices, sizeof(int));
             visited_temp[vertex] = 1;
-            
+
             while (!found_supermarket) {
                 int neighbor_count;
                 neighbors = get_neighbors(g, current_vertex, &neighbor_count);
-                
-                // Check if we found a supermarket
+
                 for (int i = 0; i < neighbor_count; i++) {
                     if (neighbors[i] == g->num_vertices - 1) {
                         current_path[path_length++] = neighbors[i];
-                        add_path_to_solution(current_solution, current_path, path_length);
+
+                        // Debug: Mostrar caminho antes de adicionar
+                        printf("Verificando caminho atual: ");
+                        for (int k = 0; k < path_length; k++) {
+                            printf("%d ", current_path[k]);
+                        }
+                        printf("\n");
+
+                        if (path_length > 1) {  // Apenas adiciona caminhos válidos
+                            add_path_to_solution(current_solution, current_path, path_length);
+                        }
                         visited[current] = 1;
                         free(current_path);
                         free(next_nodes);
@@ -45,8 +54,7 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
                         return 1;
                     }
                 }
-                
-                // Try to move to an unvisited neighbor
+
                 int moved = 0;
                 for (int i = 0; i < neighbor_count; i++) {
                     if (!visited_temp[neighbors[i]] && neighbors[i] != g->num_vertices - 1) {
@@ -57,14 +65,13 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
                         break;
                     }
                 }
-                
                 if (!moved) break;
             }
             free(visited_temp);
         }
         next_nodes[idx] = next_nodes[--next_nodes_count];
     }
-    
+
     free(current_path);
     free(next_nodes);
     return 0;

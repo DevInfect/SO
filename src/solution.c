@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../include/solution.h"
@@ -30,11 +31,13 @@ void copy_solution(Solution* dest, Solution* src) {
 }
 
 void add_path_to_solution(Solution* s, int* path, int path_length) {
-    if (s->num_paths < MAX_PATHS) {
+    if (s->num_paths < MAX_PATHS && path_length > 0) {
         s->paths[s->num_paths].path = (int*)malloc(path_length * sizeof(int));
         memcpy(s->paths[s->num_paths].path, path, path_length * sizeof(int));
         s->paths[s->num_paths].path_length = path_length;
         s->num_paths++;
         s->score++;
+    } else {
+        printf("Caminho inválido detectado, ignorando...\n");
     }
-} 
+}
