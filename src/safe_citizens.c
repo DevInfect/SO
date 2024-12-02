@@ -38,11 +38,11 @@ int find_safe_citizen(Graph* g, int* visited, Solution* current_solution) {
                         current_path[path_length++] = neighbors[i];
 
                         // Debug: Mostrar caminho antes de adicionar
-                        printf("Verificando caminho atual: ");
-                        for (int k = 0; k < path_length; k++) {
-                            printf("%d ", current_path[k]);
-                        }
-                        printf("\n");
+                        // printf("Verificando caminho atual: ");
+                        // for (int k = 0; k < path_length; k++) {
+                        //     printf("%d ", current_path[k]);
+                        // }
+                        // printf("\n");
 
                         if (path_length > 1) {  // Apenas adiciona caminhos válidos
                             add_path_to_solution(current_solution, current_path, path_length);
