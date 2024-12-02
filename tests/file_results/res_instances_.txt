@@ -1,0 +1,2 @@
+Executed in real time in 20.000 seconds.
+Best Solution = 0 at iteracao 10528598 on 0.000 seconds
